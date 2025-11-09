@@ -6,7 +6,6 @@ import { ServiceScreen } from "./ServiceScreen";
 import { AccountScreen } from "./AccountScreen";
 import { HazardScoutSettingsScreen } from "./HazardScoutSettingsScreen";
 import { BottomNavigation } from "./BottomNavigation";
-import { NavigationScreen } from "./NavigationScreen";
 import { useHazardNotifications } from "./useHazardNotifications";
 import { hazardService } from "./HazardService";
 import { Vehicle } from "../types/vehicle";
@@ -182,7 +181,7 @@ export function VWConnectApp({ onLogout, hazardState }: VWConnectAppProps) {
   const showBottomNav = currentScreen !== "hazard-settings";
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       {/* Content */}
       <div className="relative">
         {currentScreen === "home" && (

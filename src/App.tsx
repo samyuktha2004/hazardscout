@@ -3,15 +3,11 @@ import { LoginScreen } from "./components/LoginScreen";
 import { VWConnectApp } from "./components/VWConnectApp";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
-import { useHazardState } from './logic/useHazardState';
 
 type Screen = "login" | "dashboard";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("login");
-
-  // Initialize hazard state at the app root level
-  const hazardState = useHazardState();
+  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
 
   const handleAuthenticate = () => {
     setCurrentScreen("dashboard");
@@ -29,7 +25,6 @@ export default function App() {
       {currentScreen === "dashboard" && (
         <VWConnectApp 
           onLogout={handleLogout}
-          hazardState={hazardState}
         />
       )}
       <Toaster 

@@ -655,7 +655,10 @@ export function MapboxMap({
       });
 
       try {
-        const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        const marker = new mapboxgl.Marker({ 
+          element: el, 
+          anchor: 'bottom'
+        })
           .setLngLat([hazard.location.longitude, hazard.location.latitude])
           .addTo(map.current!);
         
@@ -745,7 +748,7 @@ export function MapboxMap({
                           value={startLocation}
                           onChange={(e) => setStartLocation(e.target.value)}
                           onFocus={() => setShowStartSuggestions(true)}
-                          className="flex-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                          className="flex-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-500"
                         />
                         <Button
                           onClick={useCurrentLocation}
@@ -782,7 +785,7 @@ export function MapboxMap({
                           value={destinationLocation}
                           onChange={(e) => setDestinationLocation(e.target.value)}
                           onFocus={() => setShowDestSuggestions(true)}
-                          className="flex-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                          className="flex-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-500"
                         />
                         <Button
                           onClick={fetchRouteWithHazards}
