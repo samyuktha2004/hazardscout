@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 
-// Mapbox access token - REPLACE WITH YOUR ACTUAL TOKEN
+// Mapbox access token - Get from environment variables
 // Get your token at: https://account.mapbox.com/access-tokens/
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGFyaXNzaCIsImEiOiJjbWhseDllNTkwaGIxMmlxa3FmM3VwbHl2In0.XUjNuUn7OSsR_35T2i6Frg';
+// Add to .env file: VITE_MAPBOX_TOKEN=your_token_here
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
 
 interface MapboxMapProps {
   hazards: HazardData[];

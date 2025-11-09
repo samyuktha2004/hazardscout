@@ -1,8 +1,6 @@
-# 🚗 Hazard Scout 
-**Hazard Scout** is a high-fidelity prototype for an active road safety and predictive maintenance system, designed specifically for the Volkswagen ecosystem. It transforms a vehicle's sensors into an intelligent network that detects, validates, and resolves road hazards in real-time. It is aimed to be compatible with the **VW Connect app**, or as a standalone app for non-Volkswagen users.
+# 🚗 Hazard Scout - VW Connect Dashboard
 
-
-A real-time hazard detection and vehicle-to-vehicle (V2V) communication system for vehicles. Built with React, TypeScript, and Tailwind CSS.
+A real-time hazard detection and vehicle-to-vehicle (V2V) communication system for Volkswagen vehicles. Built with React, TypeScript, and Tailwind CSS.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![React](https://img.shields.io/badge/React-18.2.0-61dafb)
@@ -88,6 +86,24 @@ npm install
 ```
 
 This will install all required packages. **Installation may take 2-5 minutes.**
+
+### Step 3: Configure Environment Variables (IMPORTANT)
+
+**🔐 Security Note: Never commit `.env` files with real API keys to GitHub!**
+
+1. Copy the example environment file:
+   ```bash
+   copy .env.example .env
+   ```
+
+2. Open `.env` and add your Mapbox token:
+   ```env
+   VITE_MAPBOX_TOKEN=your_actual_mapbox_token_here
+   ```
+
+3. Get a free Mapbox token at: https://account.mapbox.com/access-tokens/
+
+**Note:** The `.env` file is already in `.gitignore` and won't be pushed to GitHub.
 
 ---
 
