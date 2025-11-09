@@ -6,18 +6,21 @@ import { ServiceScreen } from "./ServiceScreen";
 import { AccountScreen } from "./AccountScreen";
 import { HazardScoutSettingsScreen } from "./HazardScoutSettingsScreen";
 import { BottomNavigation } from "./BottomNavigation";
+import { NavigationScreen } from "./NavigationScreen";
 import { useHazardNotifications } from "./useHazardNotifications";
 import { hazardService } from "./HazardService";
 import { Vehicle } from "../types/vehicle";
+import { useHazardState } from '../logic/useHazardState';
 
 type Tab = "home" | "status" | "scout" | "service" | "account";
 type Screen = Tab | "hazard-settings";
 
 interface VWConnectAppProps {
   onLogout: () => void;
+  hazardState?: ReturnType<typeof useHazardState>;
 }
 
-export function VWConnectApp({ onLogout }: VWConnectAppProps) {
+export function VWConnectApp({ onLogout, hazardState }: VWConnectAppProps) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
 

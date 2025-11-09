@@ -13,16 +13,19 @@ Before running this project, you need to install:
 ## Setup Instructions
 
 1. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Start Development Server**
+
    ```bash
    npm run dev
    ```
 
 3. **Build for Production**
+
    ```bash
    npm run build
    ```
@@ -32,19 +35,46 @@ Before running this project, you need to install:
    npm run preview
    ```
 
+## Documentation
+
+Detailed documentation can be found in the `docs/` folder:
+
+### Setup Guides
+
+- [Mapbox Setup Guide](docs/MAPBOX_SETUP_GUIDE.md)
+- [Google Maps Setup Guide](docs/GOOGLE_MAPS_SETUP_GUIDE.md)
+- [Quick Start Testing Guide](docs/QUICK_START_TESTING.md)
+
+### Feature Documentation
+
+- [Hazard Resolution Guide](docs/HAZARD_RESOLUTION_GUIDE.md)
+- [Live Navigation Implementation](docs/LIVE_NAVIGATION_IMPLEMENTATION.md)
+- [Notifications Guide](docs/NOTIFICATIONS_GUIDE.md)
+- [Map Markers Guide](docs/MAP_MARKERS_GUIDE.md)
+
+### Technical Documentation
+
+- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)
+- [Knowledge Base](docs/HAZARD_SCOUT_KNOWLEDGE_BASE.md)
+- [Attributions](docs/Attributions.md)
+
 ## Project Structure
 
 ```
-src/
-├── components/           # React components
-│   ├── ui/              # Reusable UI components (shadcn/ui)
-│   ├── figma/           # Figma-exported components
-│   └── *.tsx            # Main application components
-├── types/               # TypeScript type definitions
-├── styles/              # Global styles and CSS files
-├── App.tsx              # Main application component
-├── main.tsx             # Application entry point
-└── index.css            # Global styles with Tailwind CSS
+hazardscout/
+├── src/
+│   ├── components/      # React components
+│   │   ├── ui/         # Reusable UI components (shadcn/ui)
+│   │   ├── figma/      # Figma-exported components
+│   │   └── *.tsx       # Main application components
+│   ├── types/          # TypeScript type definitions
+│   ├── styles/         # Global styles and CSS files
+│   ├── logic/          # Business logic and state management
+│   ├── App.tsx         # Main application component
+│   └── main.tsx        # Application entry point
+├── docs/               # Detailed documentation
+├── public/            # Static assets
+└── [config files]     # Configuration files
 ```
 
 ## Key Features
@@ -77,6 +107,7 @@ src/
 ### Environment Setup
 
 The project includes all necessary configuration files:
+
 - `package.json` - Dependencies and scripts
 - `tsconfig.json` - TypeScript configuration
 - `vite.config.ts` - Vite build configuration
