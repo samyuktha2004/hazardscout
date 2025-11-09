@@ -58,8 +58,13 @@ A real-time hazard detection and vehicle-to-vehicle (V2V) communication system f
 - VW-branded color scheme (#0070E1)
 - Accessibility options
 - Smooth animations
+  
 
 ---
+<img width="1920" height="1080" alt="Prototype_Team_SpeedLimit pptx" src="https://github.com/user-attachments/assets/81959a97-c84d-46fb-b683-a478c032fa0a" />
+
+---
+
 
 ## 📦 Prerequisites
 
