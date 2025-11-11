@@ -1,44 +1,38 @@
-# Hazard Scout Setup Guide
+# Local Development Setup
 
 ## Prerequisites
 
 - Node.js 18+
 - NPM or Yarn
 
-## Quick Start
+## Installation
 
-1. Install dependencies:
+```bash
+npm install
+npm run dev
+# Visit http://localhost:5173
+```
 
-   ```bash
-   npm install
-   ```
+## Environment Setup
 
-2. Configure Map Services:
+Create `.env` file in project root:
 
-   ### Mapbox Setup
+```bash
+# Required for maps
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_token
 
-   1. Get token from [Mapbox](https://account.mapbox.com/access-tokens/)
-   2. Add to `.env`:
-      ```
-      VITE_MAPBOX_TOKEN=your_token_here
-      ```
+# Optional - for Google Maps fallback
+VITE_GOOGLE_MAPS_API_KEY=your_google_key
+```
 
-   ### Google Maps (Optional)
+Get tokens:
 
-   1. Get API key from [Google Cloud Console](https://console.cloud.google.com)
-   2. Add to `.env`:
-      ```
-      VITE_GOOGLE_MAPS_API_KEY=your_key_here
-      ```
+- Mapbox: https://account.mapbox.com/access-tokens/
+- Google Maps: https://console.cloud.google.com
 
-3. Start Development:
-   ```bash
-   npm run dev
-   ```
+## Configuration
 
-## Configuration Options
+- `AUTO_RESOLVE_HOURS`: Hazard auto-resolution time (default: 24)
+- `CONFIRMATIONS_NEEDED`: Reports needed to mark resolved (default: 3)
 
-- `AUTO_RESOLVE_HOURS`: Time before hazards auto-resolve (default: 24)
-- `CONFIRMATIONS_NEEDED`: Reports needed to resolve hazard (default: 3)
-- `MAP_DEFAULT_CENTER`: Default map center coordinates
-- `MAP_DEFAULT_ZOOM`: Default zoom level
+See `DEPLOYMENT.md` for production deployment.
