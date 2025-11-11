@@ -14,8 +14,8 @@ import { Input } from './ui/input';
 
 // Mapbox access token - Get from environment variables
 // Get your token at: https://account.mapbox.com/access-tokens/
-// Add to .env file: VITE_MAPBOX_TOKEN=your_token_here
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+// Add to .env file: VITE_MAPBOX_ACCESS_TOKEN=your_token_here
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
 
 interface MapboxMapProps {
   hazards: HazardData[];

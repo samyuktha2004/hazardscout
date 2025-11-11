@@ -10,8 +10,9 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 
-// Mapbox access token
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGFyaXNzaCIsImEiOiJjbWhseDllNTkwaGIxMmlxa3FmM3VwbHl2In0.XUjNuUn7OSsR_35T2i6Frg';
+// Mapbox access token — read from Vite environment variables
+// Add to project root .env: VITE_MAPBOX_ACCESS_TOKEN=your_token_here
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
 
 interface LiveNavigationMapScreenProps {
   startLocation: [number, number]; // [longitude, latitude]
