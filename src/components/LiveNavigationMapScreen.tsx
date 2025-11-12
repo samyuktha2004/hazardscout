@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 
 // Mapbox access token — read from Vite environment variables
 // Add to project root .env: VITE_MAPBOX_ACCESS_TOKEN=your_token_here
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+// Legacy/example env may use VITE_MAPBOX_TOKEN (see .env.example). Accept both.
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiaGFyaXNzaCIsImEiOiJjbWhseDllNTkwaGIxMmlxa3FmM3VwbHl2In0.XUjNuUn7OSsR_35T2i6Frg';
 
 interface LiveNavigationMapScreenProps {
   startLocation: [number, number]; // [longitude, latitude]
@@ -87,6 +88,11 @@ export function LiveNavigationMapScreen({
   const hasValidToken = MAPBOX_TOKEN && 
     MAPBOX_TOKEN !== 'YOUR_MAPBOX_TOKEN_HERE' && 
     !MAPBOX_TOKEN.includes('example') &&
+    (MAPBOX_TOKEN.startsWith('pk.') || MAPBOX_TOKEN.startsWith('sk.'));
+  
+  // Debug: Log token status for LiveNavigationMapScreen
+  console.log('LiveNav - Mapbox token detected:', hasValidToken ? 'YES' : 'NO');
+  console.log('LiveNav - Token value present:', Boolean(MAPBOX_TOKEN));
     (MAPBOX_TOKEN.startsWith('pk.') || MAPBOX_TOKEN.startsWith('sk.'));
 
   // Track user's real-time position

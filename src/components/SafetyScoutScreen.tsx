@@ -1,6 +1,7 @@
 import { Shield, MapPin, AlertTriangle, CheckCircle2, TrendingUp, Eye, EyeOff, Radio, Settings, ChevronRight, BellRing, ThumbsUp, ThumbsDown, Clock, Users, AlertCircle, Check, X, Navigation } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { MapPreview } from "./MapPreview";
 import { Switch } from "./ui/switch";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
@@ -29,6 +30,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
   const [navigationStart, setNavigationStart] = useState<[number, number] | null>(null);
   const [navigationDest, setNavigationDest] = useState<[number, number] | null>(null);
   const [navigationDestName, setNavigationDestName] = useState<string>('');
+  const [mapModalOpen, setMapModalOpen] = useState(false);
 
   // Load hazards and check notification status
   useEffect(() => {
@@ -388,11 +390,18 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
           <Card className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-slate-300 dark:border-slate-700/50">
             <CardContent className="p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Shield className="w-5 h-5 text-[#0070E1] flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[#1F2F57] dark:text-slate-200 text-sm truncate">Monitoring Active</p>
-                    <p className="text-[#9394a5] dark:text-slate-400 text-xs truncate">{activeHazards.length} active hazards nearby</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Small interactive map preview. Click opens fullscreen map modal. */}
+                  <MapPreview
+                    className="w-20 h-12 sm:w-28 sm:h-16 rounded-md flex-shrink-0"
+                    onClick={() => setMapModalOpen(true)}
+                  />
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Shield className="w-5 h-5 text-[#0070E1] flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[#1F2F57] dark:text-slate-200 text-sm truncate">Monitoring Active</p>
+                      <p className="text-[#9394a5] dark:text-slate-400 text-xs truncate">{activeHazards.length} active hazards nearby</p>
+                    </div>
                   </div>
                 </div>
                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs flex-shrink-0">
@@ -402,6 +411,30 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
             </CardContent>
           </Card>
         </div>
+
+        {/* Fullscreen map modal opened from preview */}
+        {mapModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" onClick={() => setMapModalOpen(false)}>
+            <div className="relative w-full max-w-4xl h-[80vh] mx-4" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setMapModalOpen(false)}
+                className="absolute right-3 top-3 z-40 bg-white/90 dark:bg-slate-800/90 rounded-full p-2 shadow"
+                aria-label="Close map"
+              >
+                ✕
+              </button>
+              <div className="w-full h-full rounded-lg overflow-hidden">
+                <MapboxMap
+                  hazards={activeHazards}
+                  onHazardClick={setSelectedHazard}
+                  viewMode="fullscreen"
+                  className="w-full h-full"
+                  onStartLiveNavigation={handleStartLiveNavigation}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom 1/3 - Scrollable Cards */}
@@ -490,14 +523,28 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
                                 <p className="text-[#A8A8A8] dark:text-slate-500 text-[10px] sm:text-xs">{getRelativeTime(hazard.firstDetectedAt)}</p>
                               </div>
                               <div className="flex items-center gap-3 text-[10px]">
-                                <div className="flex items-center gap-1">
-                                  <ThumbsUp className="w-2.5 h-2.5 text-green-400" />
-                                  <span className="text-green-400">{hazard.confirmationCount}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <ThumbsDown className="w-2.5 h-2.5 text-red-400" />
-                                  <span className="text-red-400">{hazard.reportedGoneCount}</span>
-                                </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleConfirmStillThere(hazard.id); }}
+                                      disabled={hazardService.hasUserConfirmed(hazard.id, 'still-there')}
+                                      className="inline-flex items-center gap-1 px-1 py-0.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/60 disabled:opacity-50"
+                                      title="Confirm hazard still there"
+                                    >
+                                      <ThumbsUp className="w-2.5 h-2.5 text-green-400" />
+                                      <span className="text-green-400 text-[11px]">{hazard.confirmationCount}</span>
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleReportGone(hazard.id); }}
+                                      disabled={hazardService.hasUserConfirmed(hazard.id, 'gone')}
+                                      className="inline-flex items-center gap-1 px-1 py-0.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/60 disabled:opacity-50"
+                                      title="Report hazard gone"
+                                    >
+                                      <ThumbsDown className="w-2.5 h-2.5 text-red-400" />
+                                      <span className="text-red-400 text-[11px]">{hazard.reportedGoneCount}</span>
+                                    </button>
+                                  </div>
                               </div>
                             </div>
                           </div>

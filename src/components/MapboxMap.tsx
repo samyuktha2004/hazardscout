@@ -15,7 +15,8 @@ import { Input } from './ui/input';
 // Mapbox access token - Get from environment variables
 // Get your token at: https://account.mapbox.com/access-tokens/
 // Add to .env file: VITE_MAPBOX_ACCESS_TOKEN=your_token_here
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+// Legacy/example env may use VITE_MAPBOX_TOKEN (see .env.example). Accept both.
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiaGFyaXNzaCIsImEiOiJjbWhseDllNTkwaGIxMmlxa3FmM3VwbHl2In0.XUjNuUn7OSsR_35T2i6Frg';
 
 interface MapboxMapProps {
   hazards: HazardData[];
@@ -106,6 +107,10 @@ export function MapboxMap({
     MAPBOX_TOKEN !== 'YOUR_MAPBOX_TOKEN_HERE' && 
     !MAPBOX_TOKEN.includes('example') &&
     (MAPBOX_TOKEN.startsWith('pk.') || MAPBOX_TOKEN.startsWith('sk.'));
+  
+  // Debug: Log token status (remove after verification)
+  console.log('Mapbox token detected:', hasValidToken ? 'YES' : 'NO');
+  console.log('Token starts with pk:', MAPBOX_TOKEN?.startsWith('pk.'));
   
   // Get user's current location
   useEffect(() => {
@@ -583,6 +588,13 @@ export function MapboxMap({
     // Add user location marker
     if (userLocation) {
       const vehicleEl = document.createElement('div');
+      // Set explicit dimensions to prevent layout shifts
+      vehicleEl.style.width = '32px';
+      vehicleEl.style.height = '32px';
+      vehicleEl.style.display = 'flex';
+      vehicleEl.style.alignItems = 'center';
+      vehicleEl.style.justifyContent = 'center';
+      
       const vehicleRoot = createRoot(vehicleEl);
       vehicleRoot.render(<VehicleMarker className="w-8 h-8" />);
       
@@ -591,7 +603,7 @@ export function MapboxMap({
           element: vehicleEl, 
           anchor: 'center',
           rotationAlignment: 'map'
-        })
+        } as any)
           .setLngLat(userLocation)
           .addTo(map.current);
         markersRef.current.push(vehicleMarker);
@@ -604,6 +616,10 @@ export function MapboxMap({
     if (destCoords && !navigationDestination) {
       const destEl = document.createElement('div');
       destEl.className = 'w-8 h-8 bg-[#0070E1] rounded-full border-4 border-white shadow-lg';
+      // Set explicit dimensions to prevent layout shifts
+      destEl.style.width = '32px';
+      destEl.style.height = '32px';
+      destEl.style.flexShrink = '0';
       
       try {
         const destMarker = new mapboxgl.Marker({ 
@@ -623,26 +639,30 @@ export function MapboxMap({
       const el = document.createElement('div');
       el.className = 'hazard-marker cursor-pointer hover:scale-110 transition-transform';
       
+      // Set explicit dimensions to prevent layout shifts during zoom/pan
+      const markerSize = viewMode === 'widget' ? 16 : 32;
+      el.style.width = `${markerSize}px`;
+      el.style.height = `${markerSize}px`;
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.flexShrink = '0';
+      // Promote the marker to its own rendering layer to prevent jitter
+      el.style.transform = 'translateZ(0)';
+      // Prevent text selection and pointer events on children from affecting positioning
+      el.style.userSelect = 'none';
+      el.style.pointerEvents = 'auto';
+      
       const root = createRoot(el);
       const MarkerComponent = getMarkerComponent(hazard);
       
       // Check if hazard is on route
       const isOnRoute = routeHazards.some(h => h.id === hazard.id);
       
-      // Pulse animation for nearby hazards or hazards on route
-      const distance = userLocation ? calculateDistance(
-        userLocation[1],
-        userLocation[0],
-        hazard.location.latitude,
-        hazard.location.longitude
-      ) : Infinity;
-      
-      const isNearby = distance < 500;
-      
       root.render(
-        <div className={isNearby || isOnRoute ? 'animate-pulse' : ''}>
+        <div className="relative" style={{ width: `${markerSize}px`, height: `${markerSize}px` }}>
           {isOnRoute && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white" style={{ pointerEvents: 'none' }}></div>
           )}
           <MarkerComponent className={viewMode === 'widget' ? 'w-4 h-4' : 'w-8 h-8'} />
         </div>
@@ -658,7 +678,7 @@ export function MapboxMap({
       try {
         const marker = new mapboxgl.Marker({ 
           element: el, 
-          anchor: 'bottom'
+          anchor: 'center' // Changed from 'bottom' to 'center' for more stable positioning
         })
           .setLngLat([hazard.location.longitude, hazard.location.latitude])
           .addTo(map.current!);
