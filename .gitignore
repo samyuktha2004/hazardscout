@@ -25,6 +25,7 @@ node_modules/
 *.key
 secrets.json
 config.local.js
+test-api-key.html
 
 # Editor directories and files
 .vscode/

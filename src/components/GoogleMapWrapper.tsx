@@ -31,38 +31,70 @@ interface GoogleMapWrapperProps {
 
 const libraries: ('places' | 'geometry')[] = ['geometry'];
 
-// Function to determine the custom marker icon based on hazard severity and type
-const getMarkerIcon = (hazard: HazardData): google.maps.Symbol => {
+// Function to create custom marker with shape, color, and icon based on hazard properties
+const getMarkerIcon = (hazard: HazardData): google.maps.Symbol | google.maps.Icon => {
   let color = '';
-  let scale = 8;
+  let scale = 6; // Smaller default size
 
-  // Color based on severity
+  // SEVERITY COLORS
   if (hazard.severity === 'high') {
     color = '#FF0000'; // Red
-    scale = 10;
+    scale = 7;
   } else if (hazard.severity === 'medium') {
-    color = '#FFD700'; // Yellow
-    scale = 8;
-  } else if (hazard.severity === 'low') {
-    color = '#808080'; // Grey
-    scale = 7;
-  } else {
-    color = '#808080'; // Default grey
-    scale = 7;
+    color = '#FFA500'; // Orange
+    scale = 6;
+  } else { // low
+    color = '#FFFF00'; // Yellow
+    scale = 5;
   }
 
-  // V2X hazards get larger markers
+  // SHAPE BASED ON SOURCE TYPE
+  // Circle for network (community/scout network)
+  if (hazard.source === 'network' || !hazard.source) {
+    return {
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 1.5,
+      scale: scale,
+    };
+  }
+  
+  // Triangle for V2X sources
   if (hazard.source === 'v2x') {
-    scale += 2;
+    return {
+      path: 'M 0,-4 L -3.5,3 L 3.5,3 Z', // Triangle pointing up
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 1.5,
+      scale: scale / 4,
+      anchor: new google.maps.Point(0, 0),
+    };
+  }
+  
+  // Square for your-car detections
+  if (hazard.source === 'your-car') {
+    return {
+      path: 'M -3,-3 L 3,-3 L 3,3 L -3,3 Z', // Square
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 1.5,
+      scale: scale / 6,
+      anchor: new google.maps.Point(0, 0),
+    };
   }
 
+  // Default circle
   return {
     path: google.maps.SymbolPath.CIRCLE,
     fillColor: color,
-    fillOpacity: 0.9,
+    fillOpacity: 1,
     strokeColor: '#FFFFFF',
-    strokeWeight: 2,
-    scale,
+    strokeWeight: 1.5,
+    scale: scale,
   };
 };
 
@@ -260,90 +292,16 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
         onLoad={onLoad}
         onUnmount={onUnmount}
         options={{
-            // mapId: "a7357a4128815498", // Optional: for custom map styling from Google Cloud
-            disableDefaultUI: true,
-            zoomControl: true,
-            clickableIcons: false, // Disables clicking on default POIs
-            styles: [ // Dark mode styles
-              { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-              { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-              { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-              {
-                featureType: "administrative.locality",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-              },
-              {
-                featureType: "poi",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-              },
-              {
-                featureType: "poi.park",
-                elementType: "geometry",
-                stylers: [{ color: "#263c3f" }],
-              },
-              {
-                featureType: "poi.park",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#6b9a76" }],
-              },
-              {
-                featureType: "road",
-                elementType: "geometry",
-                stylers: [{ color: "#38414e" }],
-              },
-              {
-                featureType: "road",
-                elementType: "geometry.stroke",
-                stylers: [{ color: "#212a37" }],
-              },
-              {
-                featureType: "road",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#9ca5b3" }],
-              },
-              {
-                featureType: "road.highway",
-                elementType: "geometry",
-                stylers: [{ color: "#746855" }],
-              },
-              {
-                featureType: "road.highway",
-                elementType: "geometry.stroke",
-                stylers: [{ color: "#1f2835" }],
-              },
-              {
-                featureType: "road.highway",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#f3d19c" }],
-              },
-              {
-                featureType: "transit",
-                elementType: "geometry",
-                stylers: [{ color: "#2f3948" }],
-              },
-              {
-                featureType: "transit.station",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-              },
-              {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#17263c" }],
-              },
-              {
-                featureType: "water",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#515c6d" }],
-              },
-              {
-                featureType: "water",
-                elementType: "labels.text.stroke",
-                stylers: [{ color: "#17263c" }],
-              },
-            ]
+            // Standard Google Maps controls for better UX
+            disableDefaultUI: false, // Enable default UI controls
+            zoomControl: true, // Show zoom buttons (+/-)
+            mapTypeControl: true, // Show map/satellite toggle
+            streetViewControl: true, // Show street view pegman
+            fullscreenControl: true, // Show fullscreen button
+            gestureHandling: 'greedy', // Smooth zoom with mouse/touch
+            clickableIcons: false, // Disable POI popups
+            // Remove dark mode styles for standard Google Maps appearance
+            styles: []
         }}
       >
         {children}

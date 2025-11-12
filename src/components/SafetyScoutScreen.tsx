@@ -311,17 +311,19 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
       <div className="h-screen w-screen fixed inset-0 bg-[#FDFAF9] dark:bg-slate-950 flex flex-col z-50">
         {/* Navigation Header */}
         <div className="bg-gradient-to-b from-white to-[#FDFAF9] dark:from-slate-900 dark:to-slate-950 px-4 pt-6 pb-3 z-10 shadow-sm flex-shrink-0">
-          <div className="flex items-center justify-center relative">
+          <div className="flex items-center justify-between">
+            {/* End Navigation Button */}
             <Button 
               onClick={handleEndLiveNavigation}
               variant="outline"
               size="sm"
-              className="absolute left-0 flex items-center gap-2"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 border-red-600 text-black hover:bg-red-600 hover:border-red-700 transition-all duration-200 shadow-md text-xs font-semibold"
             >
-              <X className="w-4 h-4" />
-              End Navigation
+              <X className="w-3.5 h-3.5" />
+              End
             </Button>
-            <div className="text-center">
+
+            <div className="text-center flex-1">
               <h2 className="text-[#1F2F57] dark:text-slate-100 text-lg font-medium">
                 {navigationDestName || 'Destination'}
               </h2>
@@ -339,11 +341,14 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
                 <p className="text-[#484B6A] dark:text-slate-400 text-xs">Calculating route...</p>
               )}
             </div>
+
+            {/* Spacer for symmetry */}
+            <div className="w-16"></div>
           </div>
         </div>
         
         {/* Full Screen Map with Directions */}
-        <div className="flex-1 w-full h-full">
+        <div className="flex-1 w-full h-full relative">
           <GoogleMapWrapper
             hazards={activeHazards}
             center={{ lat: navigationStart[1], lng: navigationStart[0] }}
@@ -353,6 +358,47 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
             directionsDestination={{ lat: navigationDest[1], lng: navigationDest[0] }}
             onRouteCalculated={(distance, duration) => setRouteInfo({ distance, duration })}
           />
+          
+          {/* Legend Overlay - Only in fullscreen navigation */}
+          <div className="absolute top-16 left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-700/50 rounded-lg p-3 space-y-3 z-10 shadow-lg">
+            <div className="text-[#1F2F57] dark:text-slate-100 font-semibold text-xs mb-2">Hazard Legend</div>
+            
+            {/* Severity Levels */}
+            <div className="space-y-1.5 border-b border-slate-200 dark:border-slate-700 pb-2">
+              <div className="text-[#484B6A] dark:text-slate-400 text-[10px] font-medium">SEVERITY (Color)</div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full border border-white shadow-sm" />
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">High</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-orange-500 rounded-full border border-white shadow-sm" />
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">Medium</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-yellow-400 rounded-full border border-white shadow-sm" />
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">Low</span>
+              </div>
+            </div>
+            
+            {/* Source Types */}
+            <div className="space-y-1.5">
+              <div className="text-[#484B6A] dark:text-slate-400 text-[10px] font-medium">SOURCE (Shape)</div>
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 14 14" className="flex-shrink-0">
+                  <polygon points="7,2 12,12 2,12" fill="#3b82f6" stroke="white" strokeWidth="1.5"/>
+                </svg>
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">V2X</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 border border-white shadow-sm flex-shrink-0" />
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">Your Car</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full border border-white shadow-sm flex-shrink-0" />
+                <span className="text-[#484B6A] dark:text-slate-300 text-xs">Network</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -376,14 +422,14 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
         </div>
         
         {/* Navigation Input Section */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-3 pb-2">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
             <input
               type="text"
               value={currentLocation ? "Current Location" : "Getting location..."}
               disabled
-              className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 cursor-not-allowed"
+              className="flex-1 px-3 py-2.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 cursor-not-allowed"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -398,7 +444,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
                   handleManualNavigation();
                 }
               }}
-              className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 placeholder:text-[#9394a5] focus:outline-none focus:ring-2 focus:ring-[#0070E1]"
+              className="flex-1 px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 placeholder:text-[#9394a5] focus:outline-none focus:ring-2 focus:ring-[#0070E1]"
             />
             <Button
               onClick={() => {
@@ -407,7 +453,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
                 handleManualNavigation();
               }}
               disabled={!currentLocation || !destinationInput.trim()}
-              className="bg-[#0070E1] hover:bg-[#0056b3] text-white px-4 py-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#0070E1] hover:bg-[#0056b3] text-white px-4 py-2.5 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               <Navigation className="w-4 h-4" />
             </Button>
@@ -419,27 +465,10 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
       <div className="flex-1 relative bg-slate-200 dark:bg-slate-900">
         <GoogleMapWrapper 
           hazards={activeHazards}
-          center={{ lat: 28.6139, lng: 77.2090 }}
+          center={currentLocation ? { lat: currentLocation[1], lng: currentLocation[0] } : { lat: 28.6139, lng: 77.2090 }}
           zoom={13}
           onHazardClick={handleStartNavigation}
         />
-
-
-        {/* Legend Overlay */}
-        <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-300 dark:border-slate-700/50 rounded-lg p-3 space-y-2 z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-full border border-red-700" />
-            <span className="text-[#484B6A] dark:text-slate-300 text-xs">Critical Hazard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-amber-500 rounded-full border border-amber-700" />
-            <span className="text-[#484B6A] dark:text-slate-300 text-xs">High Hazard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-[#0070E1] rounded-full border border-blue-700" />
-            <span className="text-[#484B6A] dark:text-slate-300 text-xs">V2X Official</span>
-          </div>
-        </div>
 
         {/* Current Status Badge */}
         <div className="absolute bottom-3 left-3 right-3">
