@@ -6,6 +6,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   root: './src',
+  envDir: path.resolve(__dirname, './'), // Explicitly point to project root for .env
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

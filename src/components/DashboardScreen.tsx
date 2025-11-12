@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { notificationService } from "./NotificationService";
 import { hazardService, HazardData, getRelativeTime } from "./HazardService";
-import { MapboxMap } from "./MapboxMap";
+import GoogleMapWrapper from "./GoogleMapWrapper";
 import { Vehicle } from "../types/vehicle";
 import { toast } from "sonner";
 
@@ -20,10 +20,10 @@ interface DashboardScreenProps {
 // Live Map Widget Component (simplified for dashboard)
 function LiveMapWidget({ hazards }: { hazards: HazardData[] }) {
   return (
-    <MapboxMap 
-      hazards={hazards.slice(0, 5)} 
-      viewMode="widget"
-      className="w-full h-full"
+    <GoogleMapWrapper 
+      hazards={hazards.slice(0, 5)}
+      center={{ lat: 28.6139, lng: 77.2090 }}
+      zoom={12}
     />
   );
 }

@@ -11,8 +11,7 @@ import { useHazardState } from "../logic/useHazardState";
 import { hazardSimulator } from "../logic/HazardSimulator";
 import { toast } from "sonner";
 import { Progress } from "./ui/progress";
-import { MapboxMap } from "./MapboxMap";
-import { LiveNavigationMapScreen } from "./LiveNavigationMapScreen";
+import GoogleMapWrapper from "./GoogleMapWrapper";
 
 interface SafetyScoutScreenProps {
   onNavigateToSettings: () => void;
@@ -162,16 +161,29 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
     return 'Scout Network';
   };
 
-  // Show Live Navigation Screen when active
+  // Show simplified Live Navigation view when active (migrated)
   if (liveNavigationActive && navigationStart && navigationDest) {
+    const navMarkers = [
+      { lat: navigationStart[1], lng: navigationStart[0] },
+      { lat: navigationDest[1], lng: navigationDest[0] },
+    ];
+
     return (
-      <LiveNavigationMapScreen
-        startLocation={navigationStart}
-        destinationLocation={navigationDest}
-        destinationName={navigationDestName}
-        hazards={activeHazards}
-        onEndNavigation={handleEndLiveNavigation}
-      />
+      <div className="min-h-screen bg-[#FDFAF9] dark:bg-slate-950 flex flex-col pb-20 sm:pb-24">
+        <div className="px-4 pt-6 pb-3 flex items-center justify-between">
+          <Button onClick={handleEndLiveNavigation}>End Navigation</Button>
+          <h2 className="text-lg">{navigationDestName || 'Live Navigation'}</h2>
+          <div />
+        </div>
+        <div className="flex-1">
+          <GoogleMapWrapper
+            hazards={activeHazards}
+            center={{ lat: navigationStart[1], lng: navigationStart[0] }}
+            zoom={14}
+            markers={navMarkers}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -195,13 +207,13 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
 
       {/* Live Map - 2/3 of viewport */}
       <div className="flex-1 relative bg-slate-200 dark:bg-slate-900">
-        <MapboxMap 
-          hazards={activeHazards} 
+        <GoogleMapWrapper 
+          hazards={activeHazards}
+          center={{ lat: 28.6139, lng: 77.2090 }}
+          zoom={13}
           onHazardClick={setSelectedHazard}
-          viewMode="fullscreen"
-          className="w-full h-full"
-          onStartLiveNavigation={handleStartLiveNavigation}
         />
+
 
         {/* Legend Overlay */}
         <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-300 dark:border-slate-700/50 rounded-lg p-3 space-y-2 z-10">
@@ -424,12 +436,11 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
                 ✕
               </button>
               <div className="w-full h-full rounded-lg overflow-hidden">
-                <MapboxMap
+                <GoogleMapWrapper 
                   hazards={activeHazards}
+                  center={{ lat: 28.6139, lng: 77.2090 }}
+                  zoom={13}
                   onHazardClick={setSelectedHazard}
-                  viewMode="fullscreen"
-                  className="w-full h-full"
-                  onStartLiveNavigation={handleStartLiveNavigation}
                 />
               </div>
             </div>
