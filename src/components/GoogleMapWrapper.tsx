@@ -1,5 +1,5 @@
 import React from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { HazardData } from './HazardService';
 
 const containerStyle = {
@@ -21,6 +21,10 @@ interface GoogleMapWrapperProps {
   onMapLoad?: (map: google.maps.Map) => void;
   onHazardClick?: (hazard: HazardData) => void;
   children?: React.ReactNode;
+  // Navigation/Directions props
+  showDirections?: boolean;
+  directionsOrigin?: { lat: number; lng: number };
+  directionsDestination?: { lat: number; lng: number };
 }
 
 const libraries: ('places' | 'geometry')[] = ['geometry'];
@@ -67,9 +71,19 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
   markers, 
   onMapLoad, 
   onHazardClick,
-  children 
+  children,
+  showDirections,
+  directionsOrigin,
+  directionsDestination
 }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const [directions, setDirections] = React.useState<google.maps.DirectionsResult | null>(null);
+  
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: apiKey,
+    libraries,
+  });
   
   // Debug: Log ALL environment variables
   React.useEffect(() => {
@@ -80,12 +94,30 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
     console.log('API Key present:', !!apiKey);
     console.log('API Key length:', apiKey?.length);
   }, []);
-  
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries,
-  });
+
+  // Calculate directions when navigation is requested
+  React.useEffect(() => {
+    if (showDirections && directionsOrigin && directionsDestination && isLoaded && window.google) {
+      const directionsService = new google.maps.DirectionsService();
+      
+      directionsService.route(
+        {
+          origin: directionsOrigin,
+          destination: directionsDestination,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
+            setDirections(result);
+          } else {
+            console.error('Directions request failed:', status);
+          }
+        }
+      );
+    } else {
+      setDirections(null);
+    }
+  }, [showDirections, directionsOrigin, directionsDestination, isLoaded]);
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
     if (onMapLoad) {
@@ -277,9 +309,24 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
       >
         {children}
         
+        {/* Render Google Directions route if navigation is active */}
+        {directions && showDirections && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: false,
+              polylineOptions: {
+                strokeColor: '#0070E1',
+                strokeWeight: 5,
+                strokeOpacity: 0.8,
+              },
+            }}
+          />
+        )}
+        
         {/* Render hazard markers with custom icons and click handlers */}
-        {hazards && hazards.map((hazard) => (
-          <Marker
+        {!showDirections && hazards && hazards.map((hazard) => (
+          <MarkerF
             key={hazard.id}
             position={{ lat: hazard.location.latitude, lng: hazard.location.longitude }}
             icon={getMarkerIcon(hazard)}
@@ -289,8 +336,8 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
         ))}
         
         {/* Render simple markers if provided (fallback) */}
-        {!hazards && markers && markers.map((marker, index) => (
-          <Marker key={index} position={marker} />
+        {!showDirections && !hazards && markers && markers.map((marker, index) => (
+          <MarkerF key={index} position={marker} />
         ))}
       </GoogleMap>
   );

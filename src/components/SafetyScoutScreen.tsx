@@ -30,6 +30,22 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
   const [navigationDest, setNavigationDest] = useState<[number, number] | null>(null);
   const [navigationDestName, setNavigationDestName] = useState<string>('');
   const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [destinationInput, setDestinationInput] = useState<string>('');
+
+  // Get user's current location on mount
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+        }
+      );
+    }
+  }, []);
 
   // Load hazards and check notification status
   useEffect(() => {
@@ -100,12 +116,37 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
   };
 
   const handleStartNavigation = (hazard: HazardData) => {
-    setNavigationActive(true);
-    setNavigatingTo(hazard.id);
-    toast.success(`Navigation started to ${hazard.type}`, {
-      description: hazard.locationName,
-      duration: 3000,
-    });
+    // Get user's current location
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLocation: [number, number] = [position.coords.longitude, position.coords.latitude];
+          const hazardLocation: [number, number] = [hazard.location.longitude, hazard.location.latitude];
+          
+          setNavigationStart(userLocation);
+          setNavigationDest(hazardLocation);
+          setNavigationDestName(hazard.locationName || hazard.type);
+          setLiveNavigationActive(true);
+          
+          toast.success(`Navigation started to ${hazard.type}`, {
+            description: hazard.locationName,
+            duration: 3000,
+          });
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          toast.error("Could not get your location", {
+            description: "Please enable location services",
+            duration: 3000,
+          });
+        }
+      );
+    } else {
+      toast.error("Location not available", {
+        description: "Your browser doesn't support geolocation",
+        duration: 3000,
+      });
+    }
   };
 
   const handleStopNavigation = () => {
@@ -127,6 +168,61 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
     setNavigationDest(null);
     setNavigationDestName('');
     toast.info("Navigation ended");
+  };
+
+  const handleManualNavigation = async () => {
+    if (!destinationInput.trim()) {
+      toast.error("Please enter a destination");
+      return;
+    }
+
+    if (!currentLocation) {
+      toast.error("Getting your location...", {
+        description: "Please wait while we fetch your current location",
+      });
+      return;
+    }
+
+    // Check if Google Maps is loaded
+    if (!window.google || !window.google.maps) {
+      toast.error("Maps not loaded", {
+        description: "Please wait for the map to load and try again",
+      });
+      return;
+    }
+
+    try {
+      // Use Google Geocoding API to convert address to coordinates
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode({ address: destinationInput }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          const destCoords: [number, number] = [location.lng(), location.lat()];
+          
+          setNavigationStart(currentLocation);
+          setNavigationDest(destCoords);
+          setNavigationDestName(destinationInput);
+          setLiveNavigationActive(true);
+          
+          toast.success("Navigation started", {
+            description: `Routing to ${results[0].formatted_address}`,
+            duration: 3000,
+          });
+        } else {
+          toast.error("Location not found", {
+            description: "Please try a different address or place name",
+            duration: 3000,
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      toast.error("Failed to find location", {
+        description: "Please check your internet connection",
+        duration: 3000,
+      });
+    }
   };
 
   const getSeverityColor = (severity: string) => {
@@ -163,24 +259,38 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
 
   // Show simplified Live Navigation view when active (migrated)
   if (liveNavigationActive && navigationStart && navigationDest) {
-    const navMarkers = [
-      { lat: navigationStart[1], lng: navigationStart[0] },
-      { lat: navigationDest[1], lng: navigationDest[0] },
-    ];
-
     return (
-      <div className="min-h-screen bg-[#FDFAF9] dark:bg-slate-950 flex flex-col pb-20 sm:pb-24">
-        <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-          <Button onClick={handleEndLiveNavigation}>End Navigation</Button>
-          <h2 className="text-lg">{navigationDestName || 'Live Navigation'}</h2>
-          <div />
+      <div className="min-h-screen bg-[#FDFAF9] dark:bg-slate-950 flex flex-col">
+        {/* Navigation Header */}
+        <div className="bg-gradient-to-b from-white to-[#FDFAF9] dark:from-slate-900 dark:to-slate-950 px-4 pt-6 pb-3 z-10 shadow-sm">
+          <div className="flex items-center justify-center relative">
+            <Button 
+              onClick={handleEndLiveNavigation}
+              variant="outline"
+              size="sm"
+              className="absolute left-0 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              End Navigation
+            </Button>
+            <div className="text-center">
+              <h2 className="text-[#1F2F57] dark:text-slate-100 text-lg font-medium">
+                {navigationDestName || 'Destination'}
+              </h2>
+              <p className="text-[#484B6A] dark:text-slate-400 text-xs">Live turn-by-turn navigation</p>
+            </div>
+          </div>
         </div>
+        
+        {/* Full Screen Map with Directions */}
         <div className="flex-1">
           <GoogleMapWrapper
             hazards={activeHazards}
             center={{ lat: navigationStart[1], lng: navigationStart[0] }}
             zoom={14}
-            markers={navMarkers}
+            showDirections={true}
+            directionsOrigin={{ lat: navigationStart[1], lng: navigationStart[0] }}
+            directionsDestination={{ lat: navigationDest[1], lng: navigationDest[0] }}
           />
         </div>
       </div>
@@ -203,6 +313,41 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
             </Badge>
           )}
         </div>
+        
+        {/* Navigation Input Section */}
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <input
+              type="text"
+              value={currentLocation ? "Current Location" : "Getting location..."}
+              disabled
+              className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 cursor-not-allowed"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+            <input
+              type="text"
+              placeholder="Enter destination (address, place name, or coordinates)"
+              value={destinationInput}
+              onChange={(e) => setDestinationInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleManualNavigation();
+                }
+              }}
+              className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 placeholder:text-[#9394a5] focus:outline-none focus:ring-2 focus:ring-[#0070E1]"
+            />
+            <Button
+              onClick={handleManualNavigation}
+              disabled={!currentLocation || !destinationInput.trim()}
+              className="bg-[#0070E1] hover:bg-[#0056b3] text-white px-4 py-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Navigation className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Live Map - 2/3 of viewport */}
@@ -211,7 +356,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
           hazards={activeHazards}
           center={{ lat: 28.6139, lng: 77.2090 }}
           zoom={13}
-          onHazardClick={setSelectedHazard}
+          onHazardClick={handleStartNavigation}
         />
 
 
@@ -230,172 +375,6 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
             <span className="text-[#484B6A] dark:text-slate-300 text-xs">V2X Official</span>
           </div>
         </div>
-
-        {/* Selected Hazard Detail Card */}
-        {selectedHazard && (
-          <div className="absolute bottom-4 left-4 right-4 max-h-[50vh] overflow-y-auto z-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <Card className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-slate-300 dark:border-slate-700/50">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getSeverityColor(selectedHazard.severity)}`}>
-                      <AlertTriangle className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="text-[#1F2F57] dark:text-slate-200 text-sm">{selectedHazard.type}</p>
-                        <Badge className={`text-xs ${getSeverityColor(selectedHazard.severity)}`}>
-                          {selectedHazard.severity}
-                        </Badge>
-                        <Badge className={`text-xs ${getStatusColor(selectedHazard.status)}`}>
-                          {selectedHazard.status}
-                        </Badge>
-                      </div>
-                      <p className="text-[#9394a5] dark:text-slate-400 text-xs mb-1">{selectedHazard.locationName}</p>
-                      <div className="flex items-center gap-3 text-xs flex-wrap">
-                        {selectedHazard.distance && (
-                          <>
-                            <span className="text-[#0070E1]">{selectedHazard.distance} ahead</span>
-                            <span className="text-[#A8A8A8] dark:text-slate-500">•</span>
-                          </>
-                        )}
-                        <span className="text-[#A8A8A8] dark:text-slate-500">{getRelativeTime(selectedHazard.firstDetectedAt)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <span className="text-xs">{getSourceIcon(selectedHazard.source)}</span>
-                        <span className="text-xs text-[#9394a5] dark:text-slate-400">
-                          {getSourceLabel(selectedHazard.source)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedHazard(null)}
-                    className="text-[#9394a5] hover:text-[#1F2F57] dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Hazard Statistics */}
-                <div className="grid grid-cols-3 gap-2 mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/30">
-                  <div className="text-center">
-                    <p className="text-[#9394a5] dark:text-slate-400 text-[10px] mb-0.5">Detected</p>
-                    <p className="text-[#1F2F57] dark:text-slate-200 text-sm">{selectedHazard.detectionCount}x</p>
-                  </div>
-                  <div className="text-center border-x border-slate-200 dark:border-slate-700/30">
-                    <p className="text-[#9394a5] dark:text-slate-400 text-[10px] mb-0.5">Confirmed</p>
-                    <p className="text-green-400 text-sm">{selectedHazard.confirmationCount}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[#9394a5] dark:text-slate-400 text-[10px] mb-0.5">Reported Gone</p>
-                    <p className="text-amber-400 text-sm">{selectedHazard.reportedGoneCount}</p>
-                  </div>
-                </div>
-
-                {/* Resolution Progress (if resolving) */}
-                {selectedHazard.status === 'resolving' && (() => {
-                  const progress = hazardService.getResolutionProgress(selectedHazard.id);
-                  if (!progress) return null;
-                  
-                  return (
-                    <div className="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-amber-400" />
-                          <span className="text-amber-400 text-xs">Pending Resolution</span>
-                        </div>
-                        <span className="text-[#9394a5] dark:text-slate-400 text-xs">
-                          {progress.currentGoneReports}/{progress.confirmationsNeeded} reports
-                        </span>
-                      </div>
-                      <Progress value={progress.percentageToResolution} className="h-2 mb-2" />
-                      {progress.timeRemainingMs && (
-                        <p className="text-[#A8A8A8] dark:text-slate-500 text-[10px]">
-                          Auto-resolves in {formatTimeRemaining(progress.timeRemainingMs)} without confirmation
-                        </p>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* User Action Buttons */}
-                {selectedHazard.status !== 'resolved' && (
-                  <div className="space-y-2">
-                    {/* Navigation Button */}
-                    <Button
-                      onClick={() => handleStartNavigation(selectedHazard)}
-                      className="w-full bg-[#0070E1] hover:bg-[#0056b3] text-white h-auto py-3 flex items-center justify-center gap-2"
-                    >
-                      <Navigation className="w-4 h-4" />
-                      <span className="text-sm">Navigate to Hazard</span>
-                    </Button>
-                    
-                    <p className="text-[#484B6A] dark:text-slate-300 text-xs mb-2">Help us verify this hazard:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        onClick={() => handleConfirmStillThere(selectedHazard.id)}
-                        disabled={hazardService.hasUserConfirmed(selectedHazard.id, 'still-there')}
-                        variant="outline"
-                        className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10 h-auto py-2.5 flex flex-col items-center gap-1"
-                      >
-                        {hazardService.hasUserConfirmed(selectedHazard.id, 'still-there') ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            <span className="text-xs">Confirmed</span>
-                          </>
-                        ) : (
-                          <>
-                            <ThumbsUp className="w-4 h-4" />
-                            <span className="text-xs">Still There</span>
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        onClick={() => handleReportGone(selectedHazard.id)}
-                        disabled={hazardService.hasUserConfirmed(selectedHazard.id, 'gone')}
-                        variant="outline"
-                        className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 h-auto py-2.5 flex flex-col items-center gap-1"
-                      >
-                        {hazardService.hasUserConfirmed(selectedHazard.id, 'gone') ? (
-                          <>
-                            <X className="w-4 h-4" />
-                            <span className="text-xs">Reported</span>
-                          </>
-                        ) : (
-                          <>
-                            <ThumbsDown className="w-4 h-4" />
-                            <span className="text-xs">Hazard Gone</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <div className="bg-slate-100 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-200 dark:border-slate-700/30">
-                      <p className="text-[#9394a5] dark:text-slate-400 text-[10px] leading-relaxed">
-                        {selectedHazard.status === 'active' 
-                          ? "Your feedback helps other drivers stay safe and keeps our map accurate."
-                          : `${3 - selectedHazard.reportedGoneCount} more "gone" reports needed to resolve this hazard.`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Resolved message */}
-                {selectedHazard.status === 'resolved' && (
-                  <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/30">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <p className="text-green-400 text-xs">
-                        This hazard has been resolved. Thanks to everyone who reported!
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Current Status Badge */}
         <div className="absolute bottom-3 left-3 right-3">
