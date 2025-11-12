@@ -76,7 +76,7 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
   directionsOrigin,
   directionsDestination
 }) => {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   const [directions, setDirections] = React.useState<google.maps.DirectionsResult | null>(null);
   
   const { isLoaded, loadError } = useJsApiLoader({
@@ -84,16 +84,6 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
     googleMapsApiKey: apiKey,
     libraries,
   });
-  
-  // Debug: Log ALL environment variables
-  React.useEffect(() => {
-    console.log('=== Google Maps Debug ===');
-    console.log('All env vars:', import.meta.env);
-    console.log('API Key from env:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
-    console.log('API Key variable:', apiKey);
-    console.log('API Key present:', !!apiKey);
-    console.log('API Key length:', apiKey?.length);
-  }, []);
 
   // Calculate directions when navigation is requested
   React.useEffect(() => {

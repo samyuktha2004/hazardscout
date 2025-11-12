@@ -25,6 +25,7 @@ A real-time hazard detection and vehicle-to-vehicle (V2V) communication system f
 ## ✨ Features
 
 ### 🚙 Vehicle Management
+
 - Multi-vehicle dashboard (Electric, Petrol, Diesel)
 - Real-time battery/fuel level monitoring
 - Vehicle lock/unlock controls
@@ -32,13 +33,15 @@ A real-time hazard detection and vehicle-to-vehicle (V2V) communication system f
 - Vehicle status tracking
 
 ### 🗺️ Live Hazard Map
-- Interactive Mapbox-powered map
+
+- Interactive Google Maps-powered map
 - Real-time hazard markers (potholes, debris, speed bumps, cracks)
 - Chennai road coverage with actual street names
 - GPS-based location tracking
 - Navigation to hazard locations
 
 ### ⚠️ Safety Scout
+
 - Active hazard monitoring
 - User hazard confirmation system
 - Community-driven hazard resolution
@@ -46,6 +49,7 @@ A real-time hazard detection and vehicle-to-vehicle (V2V) communication system f
 - Hazard severity indicators (High/Medium/Low)
 
 ### 📡 V2V Network Communication
+
 - Real-time Vehicle-to-Vehicle hazard sharing
 - 5km broadcast radius
 - Automatic hazard map pinning
@@ -53,18 +57,18 @@ A real-time hazard detection and vehicle-to-vehicle (V2V) communication system f
 - Network status visualization
 
 ### 🎨 User Interface
+
 - Dark/Light mode support
 - Fully responsive mobile design
 - VW-branded color scheme (#0070E1)
 - Accessibility options
 - Smooth animations
-  
 
 ---
+
 <img width="1920" height="1080" alt="Prototype_Team_SpeedLimit pptx" src="https://github.com/user-attachments/assets/81959a97-c84d-46fb-b683-a478c032fa0a" />
 
 ---
-
 
 ## 📦 Prerequisites
 
@@ -97,16 +101,18 @@ This will install all required packages. **Installation may take 2-5 minutes.**
 **🔐 Security Note: Never commit `.env` files with real API keys to GitHub!**
 
 1. Copy the example environment file:
+
    ```bash
    copy .env.example .env
    ```
 
-2. Open `.env` and add your Mapbox token:
+2. Open `.env` and add your Google Maps API key:
+
    ```env
-   VITE_MAPBOX_TOKEN=your_actual_mapbox_token_here
+   VITE_GOOGLE_MAPS_API_KEY=your_actual_key_here
    ```
 
-3. Get a free Mapbox token at: https://account.mapbox.com/access-tokens/
+3. Get a free Google Maps API key at: https://console.cloud.google.com/
 
 **Note:** The `.env` file is already in `.gitignore` and won't be pushed to GitHub.
 
@@ -138,6 +144,7 @@ npm run dev
 ### Access the Application:
 
 Open your browser and navigate to:
+
 ```
 http://localhost:5174
 ```
@@ -156,7 +163,8 @@ c:\IMOBILITHON 5.0\src/
 │   │   ├── SafetyScoutScreen.tsx       # Hazard monitoring
 │   │   ├── VehicleStatusScreen.tsx     # Vehicle details
 │   │   ├── AccountScreen.tsx           # User settings
-│   │   ├── MapboxMap.tsx               # Interactive map
+│   │   ├── GoogleMapWrapper.tsx         # Interactive map
+│   │   ├── LiveNavigationMapScreen.tsx  # Navigation with routes
 │   │   ├── BottomNavigation.tsx        # Navigation bar
 │   │   ├── V2VNetworkService.ts        # V2V communication
 │   │   ├── V2VNetworkVisualization.tsx # Network visualization
@@ -185,24 +193,28 @@ c:\IMOBILITHON 5.0\src/
 ## 🎯 Key Features
 
 ### 1. Dashboard Screen
+
 - View all your vehicles at a glance
 - Quick access to vehicle controls
 - Nearest hazard alerts
 - Live map widget
 
 ### 2. Safety Scout
+
 - Browse active hazards in your area
 - Confirm if hazards are still present
 - Report resolved hazards
 - View hazard details with photos
 
 ### 3. Vehicle Status
+
 - Detailed vehicle information
 - Battery/Fuel levels
 - Mileage tracking
 - Lock/unlock controls
 
 ### 4. Service & Account
+
 - Service history
 - User profile management
 - Theme settings (Dark/Light)
@@ -231,6 +243,7 @@ c:\IMOBILITHON 5.0\src/
 ### Chennai Road Coverage
 
 Demo includes hazards on major Chennai roads:
+
 - Anna Salai (Mount Road)
 - OMR (Old Mahabalipuram Road)
 - ECR (East Coast Road)
@@ -238,6 +251,7 @@ Demo includes hazards on major Chennai roads:
 - GST Road, Guindy
 
 For detailed V2V documentation, see:
+
 - `V2V_NETWORK_README.md` - Developer integration guide
 - `V2V_NETWORK_COMPLETE.md` - Complete documentation
 - `V2V_QUICK_START.md` - Quick start guide
@@ -247,24 +261,32 @@ For detailed V2V documentation, see:
 ## 🛠️ Technologies Used
 
 ### Frontend Framework
+
 - **React 18.2.0** - UI library
 - **TypeScript 5.2.2** - Type safety
 - **Vite 4.5.0** - Build tool & dev server
 
 ### Styling
+
 - **Tailwind CSS 3.3.6** - Utility-first CSS
 - **Radix UI** - Accessible components
 - **Lucide Icons** - Icon library
 
 ### Mapping
-- **Mapbox GL JS** - Interactive maps
+
+### Mapping
+
+- **Google Maps JavaScript API** - Interactive maps
+- **Google Directions API** - Route planning
 - **Geolocation API** - GPS tracking
 
 ### State Management
+
 - **React Hooks** - useState, useEffect, useContext
 - **Local Storage** - Data persistence
 
 ### Networking
+
 - **WebSocket** (ready for integration) - Real-time V2V communication
 - **Fetch API** - HTTP requests
 
@@ -274,15 +296,17 @@ For detailed V2V documentation, see:
 
 ### Environment Variables
 
-The app includes a demo Mapbox token in `MapboxMap.tsx`. For production:
+For production setup:
 
-1. Sign up at [Mapbox](https://mapbox.com)
-2. Create a new access token
-3. Update the `MAPBOX_TOKEN` constant in `src/components/MapboxMap.tsx`
+1. Sign up at [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable Google Maps JavaScript API and Directions API
+3. Create an API key
+4. Add to `.env`: `VITE_GOOGLE_MAPS_API_KEY=your_key`
 
 ### V2V Server Setup
 
 For real V2V communication:
+
 1. Setup a WebSocket server (see `V2V_NETWORK_README.md`)
 2. Update WebSocket URL in `V2VNetworkService.ts`
 3. Deploy the server
@@ -312,8 +336,8 @@ npm install
 
 ### Map Not Loading
 
-1. Check internet connection (Mapbox requires internet)
-2. Verify Mapbox token in `MapboxMap.tsx`
+1. Check internet connection (Google Maps requires internet)
+2. Verify Google Maps API key in `.env`
 3. Check browser console for errors (F12)
 
 ### Build Errors
@@ -350,6 +374,7 @@ The app is fully responsive! To view in mobile format:
 ### VW Brand Colors
 
 The app uses official VW colors:
+
 - Primary Blue: `#0070E1`
 - Light Background: `#FDFAF9`
 - Dark Background: `#0F172A` (Slate 950)
@@ -361,20 +386,24 @@ The app uses official VW colors:
 Detailed documentation can be found in the `docs/` folder:
 
 ### Setup Guides
+
 - [Mapbox Setup Guide](docs/MAPBOX_SETUP_GUIDE.md)
 - [Quick Start Testing Guide](docs/QUICK_START_TESTING.md)
 
 ### Feature Documentation
+
 - [Hazard Resolution Guide](docs/HAZARD_RESOLUTION_GUIDE.md)
 - [Live Navigation Implementation](docs/LIVE_NAVIGATION_IMPLEMENTATION.md)
 - [Notifications Guide](docs/NOTIFICATIONS_GUIDE.md)
 - [Map Markers Guide](docs/MAP_MARKERS_GUIDE.md)
 
 ### Technical Documentation
+
 - [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)
 - [Knowledge Base](docs/HAZARD_SCOUT_KNOWLEDGE_BASE.md)
 
 ### V2V Network Documentation
+
 - **V2V Network Guide**: `V2V_NETWORK_README.md`
 - **V2V Complete Documentation**: `V2V_NETWORK_COMPLETE.md`
 - **Quick Start Guide**: `V2V_QUICK_START.md`
@@ -421,6 +450,7 @@ This project was developed for IMOBILITHON 5.0 hackathon.
 ## 👥 Team
 
 Developed for IMOBILITHON 5.0
+
 - GitHub: [samyuktha2004/hazardscout](https://github.com/samyuktha2004/hazardscout)
 
 ---

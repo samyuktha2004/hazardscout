@@ -1,7 +1,7 @@
 /**
  * V2V Auto-Pin Integration
  * Automatically pins hazards detected by nearby vehicles on the map
- * This component bridges LiveDetectionDemo, V2V Service, and MapboxMap
+ * This component bridges LiveDetectionDemo and V2V Service
  */
 
 import { useEffect, useCallback } from 'react';

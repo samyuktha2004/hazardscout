@@ -64,16 +64,16 @@ hazardscout/
 
 ## Common Tasks
 
-**Add Mapbox token for testing:**
+**Add Google Maps API key for testing:**
 
 1. Create `.env` in root
-2. Add: `VITE_MAPBOX_ACCESS_TOKEN=your_token`
+2. Add: `VITE_GOOGLE_MAPS_API_KEY=your_key`
 3. Restart `npm run dev`
 
 **View source code:**
 
 - Main app: `src/components/VWConnectApp.tsx`
-- Map: `src/components/MapboxMap.tsx`
+- Map: `src/components/GoogleMapWrapper.tsx`
 - Hazards: `src/logic/useHazardState.ts`
 
 **Deploy to production:**
