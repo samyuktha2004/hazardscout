@@ -26,6 +26,7 @@ interface GoogleMapWrapperProps {
   showDirections?: boolean;
   directionsOrigin?: { lat: number; lng: number };
   directionsDestination?: { lat: number; lng: number };
+  onRouteCalculated?: (distance: string, duration: string) => void;
 }
 
 const libraries: ('places' | 'geometry')[] = ['geometry'];
@@ -75,7 +76,8 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
   children,
   showDirections,
   directionsOrigin,
-  directionsDestination
+  directionsDestination,
+  onRouteCalculated
 }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   const [directions, setDirections] = React.useState<google.maps.DirectionsResult | null>(null);
@@ -113,6 +115,19 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
         if (status === google.maps.DirectionsStatus.OK && result) {
           console.log('✅ Directions calculated successfully:', result);
           setDirections(result);
+          
+          // Extract and pass distance/duration to parent
+          if (result.routes[0]?.legs[0]) {
+            const leg = result.routes[0].legs[0];
+            const distance = leg.distance?.text || '';
+            const duration = leg.duration?.text || '';
+            console.log('📍 Route info:', { distance, duration });
+            
+            if (onRouteCalculated) {
+              onRouteCalculated(distance, duration);
+            }
+          }
+          
           const totalDistance = result.routes[0].legs.reduce((sum, leg) => sum + leg.distance?.value || 0, 0);
           toast.success('Route calculated', {
             description: `Distance: ${(totalDistance / 1000).toFixed(1)}km`,

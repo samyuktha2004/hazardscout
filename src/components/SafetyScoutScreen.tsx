@@ -32,6 +32,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [destinationInput, setDestinationInput] = useState<string>('');
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
 
   // Get user's current location on mount
   useEffect(() => {
@@ -324,7 +325,19 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
               <h2 className="text-[#1F2F57] dark:text-slate-100 text-lg font-medium">
                 {navigationDestName || 'Destination'}
               </h2>
-              <p className="text-[#484B6A] dark:text-slate-400 text-xs">Live turn-by-turn navigation</p>
+              {routeInfo ? (
+                <div className="flex items-center justify-center gap-3 mt-1">
+                  <span className="text-[#0070E1] dark:text-blue-400 text-sm font-semibold">
+                    {routeInfo.duration}
+                  </span>
+                  <span className="text-[#484B6A] dark:text-slate-400 text-xs">•</span>
+                  <span className="text-[#484B6A] dark:text-slate-400 text-sm">
+                    {routeInfo.distance}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-[#484B6A] dark:text-slate-400 text-xs">Calculating route...</p>
+              )}
             </div>
           </div>
         </div>
@@ -338,6 +351,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
             showDirections={true}
             directionsOrigin={{ lat: navigationStart[1], lng: navigationStart[0] }}
             directionsDestination={{ lat: navigationDest[1], lng: navigationDest[0] }}
+            onRouteCalculated={(distance, duration) => setRouteInfo({ distance, duration })}
           />
         </div>
       </div>
