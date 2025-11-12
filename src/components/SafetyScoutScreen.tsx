@@ -307,9 +307,9 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
   // Show simplified Live Navigation view when active (migrated)
   if (liveNavigationActive && navigationStart && navigationDest) {
     return (
-      <div className="min-h-screen bg-[#FDFAF9] dark:bg-slate-950 flex flex-col">
+      <div className="h-screen w-screen fixed inset-0 bg-[#FDFAF9] dark:bg-slate-950 flex flex-col z-50">
         {/* Navigation Header */}
-        <div className="bg-gradient-to-b from-white to-[#FDFAF9] dark:from-slate-900 dark:to-slate-950 px-4 pt-6 pb-3 z-10 shadow-sm">
+        <div className="bg-gradient-to-b from-white to-[#FDFAF9] dark:from-slate-900 dark:to-slate-950 px-4 pt-6 pb-3 z-10 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-center relative">
             <Button 
               onClick={handleEndLiveNavigation}
@@ -330,7 +330,7 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
         </div>
         
         {/* Full Screen Map with Directions */}
-        <div className="flex-1">
+        <div className="flex-1 w-full h-full">
           <GoogleMapWrapper
             hazards={activeHazards}
             center={{ lat: navigationStart[1], lng: navigationStart[0] }}
