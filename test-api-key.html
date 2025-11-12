@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps API Key Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            margin: 20px 0;
+            background: #2a2a3e;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #00ff00;
+            color: #000;
+        }
+        .error {
+            background: #ff0000;
+            color: #fff;
+        }
+        .info {
+            background: #ffaa00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Maps API Key Test</h1>
+    <div id="status"></div>
+    <div id="map"></div>
+    <div id="console-output"></div>
+
+    <script>
+        const API_KEY = 'AIzaSyDGc_buLD8ptLlbsMeEcLAuqa09nEjFwdE';
+        const statusDiv = document.getElementById('status');
+        const consoleDiv = document.getElementById('console-output');
+
+        function log(message, type = 'info') {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            consoleDiv.appendChild(div);
+        }
+
+        log(`Testing API Key: ${API_KEY.substring(0, 20)}...`, 'info');
+
+        // Test 1: Load Google Maps
+        window.initMap = function() {
+            log('✅ Maps JavaScript API loaded successfully!', 'success');
+            
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 13.0827, lng: 80.2707 }, // Chennai
+                zoom: 12
+            });
+
+            log('✅ Map created successfully!', 'success');
+
+            // Test 2: Geocoding API
+            const geocoder = new google.maps.Geocoder();
+            log('Testing Geocoding API...', 'info');
+            
+            geocoder.geocode({ address: 'Chennai Airport' }, (results, status) => {
+                if (status === 'OK') {
+                    log('✅ Geocoding API works!', 'success');
+                    log(`Found: ${results[0].formatted_address}`, 'success');
+                    
+                    // Add marker
+                    new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+                    });
+                } else {
+                    log(`❌ Geocoding API failed: ${status}`, 'error');
+                    if (status === 'REQUEST_DENIED') {
+                        log('Geocoding API is not enabled or restricted', 'error');
+                    }
+                }
+            });
+
+            // Test 3: Directions API
+            log('Testing Directions API...', 'info');
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            directionsService.route({
+                origin: { lat: 13.0827, lng: 80.2707 },
+                destination: { lat: 13.0475, lng: 80.2824 },
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK') {
+                    log('✅ Directions API works!', 'success');
+                    directionsRenderer.setDirections(result);
+                } else {
+                    log(`❌ Directions API failed: ${status}`, 'error');
+                    if (status === 'REQUEST_DENIED') {
+                        log('Directions API is not enabled or restricted', 'error');
+                    }
+                }
+            });
+        };
+
+        window.gm_authFailure = function() {
+            log('❌ API KEY AUTHENTICATION FAILED!', 'error');
+            log('Possible reasons:', 'error');
+            log('1. API key is invalid or deleted', 'error');
+            log('2. API key has domain restrictions (add localhost)', 'error');
+            log('3. Required APIs are not enabled', 'error');
+            log('4. Billing is not enabled on the project', 'error');
+        };
+
+        // Load the script
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap&libraries=places,geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = function() {
+            log('❌ Failed to load Google Maps script', 'error');
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

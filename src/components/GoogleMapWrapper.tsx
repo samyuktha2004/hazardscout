@@ -98,6 +98,7 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
   // Calculate directions when navigation is requested
   React.useEffect(() => {
     if (showDirections && directionsOrigin && directionsDestination && isLoaded && window.google) {
+      console.log('Calculating directions from', directionsOrigin, 'to', directionsDestination);
       const directionsService = new google.maps.DirectionsService();
       
       directionsService.route(
@@ -107,14 +108,18 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
           travelMode: google.maps.TravelMode.DRIVING,
         },
         (result, status) => {
+          console.log('Directions response - Status:', status);
           if (status === google.maps.DirectionsStatus.OK && result) {
+            console.log('Directions calculated successfully:', result);
             setDirections(result);
           } else {
-            console.error('Directions request failed:', status);
+            console.error('Directions request failed:', status, result);
+            alert(`Directions request failed: ${status}. Please check if the Directions API is enabled in Google Cloud Console.`);
           }
         }
       );
     } else {
+      console.log('Clearing directions - showDirections:', showDirections, 'origin:', directionsOrigin, 'dest:', directionsDestination, 'isLoaded:', isLoaded);
       setDirections(null);
     }
   }, [showDirections, directionsOrigin, directionsDestination, isLoaded]);
@@ -324,8 +329,8 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
           />
         )}
         
-        {/* Render hazard markers with custom icons and click handlers */}
-        {!showDirections && hazards && hazards.map((hazard) => (
+        {/* Render hazard markers with custom icons and click handlers - ALWAYS show hazards */}
+        {hazards && hazards.map((hazard) => (
           <MarkerF
             key={hazard.id}
             position={{ lat: hazard.location.latitude, lng: hazard.location.longitude }}
@@ -336,7 +341,7 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
         ))}
         
         {/* Render simple markers if provided (fallback) */}
-        {!showDirections && !hazards && markers && markers.map((marker, index) => (
+        {!hazards && markers && markers.map((marker, index) => (
           <MarkerF key={index} position={marker} />
         ))}
       </GoogleMap>

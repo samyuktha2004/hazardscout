@@ -170,7 +170,12 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
     toast.info("Navigation ended");
   };
 
-  const handleManualNavigation = async () => {
+  const handleManualNavigation = () => {
+    console.log('=== handleManualNavigation CALLED ===');
+    console.log('Destination input:', destinationInput);
+    console.log('Current location:', currentLocation);
+    console.log('Google Maps loaded:', !!window.google);
+    
     if (!destinationInput.trim()) {
       toast.error("Please enter a destination");
       return;
@@ -191,38 +196,65 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
       return;
     }
 
-    try {
-      // Use Google Geocoding API to convert address to coordinates
-      const geocoder = new google.maps.Geocoder();
+    // Use Google Geocoding REST API directly (more reliable than SDK)
+    const geocodeWithFetch = async () => {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      const encodedAddress = encodeURIComponent(destinationInput);
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
       
-      geocoder.geocode({ address: destinationInput }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          const location = results[0].geometry.location;
-          const destCoords: [number, number] = [location.lng(), location.lat()];
+      console.log('Fetching geocoding from REST API:', url);
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('Geocoding REST response:', data);
+        
+        if (data.status === 'OK' && data.results && data.results[0]) {
+          const location = data.results[0].geometry.location;
+          const destCoords: [number, number] = [location.lng, location.lat];
+          
+          console.log('Navigation - Start:', currentLocation, 'Dest:', destCoords);
           
           setNavigationStart(currentLocation);
           setNavigationDest(destCoords);
-          setNavigationDestName(destinationInput);
+          setNavigationDestName(data.results[0].formatted_address || destinationInput);
           setLiveNavigationActive(true);
           
           toast.success("Navigation started", {
-            description: `Routing to ${results[0].formatted_address}`,
+            description: `Routing to ${data.results[0].formatted_address}`,
             duration: 3000,
           });
         } else {
-          toast.error("Location not found", {
-            description: "Please try a different address or place name",
-            duration: 3000,
-          });
+          console.error('Geocoding failed:', data.status, data.error_message);
+          
+          if (data.status === 'REQUEST_DENIED') {
+            toast.error("Geocoding API Error", {
+              description: data.error_message || "API key issue - check restrictions",
+              duration: 5000,
+            });
+          } else if (data.status === 'ZERO_RESULTS') {
+            toast.error("Location not found", {
+              description: "Please try a different address",
+              duration: 3000,
+            });
+          } else {
+            toast.error(`Geocoding error: ${data.status}`, {
+              description: data.error_message || "Please check API configuration",
+              duration: 3000,
+            });
+          }
         }
-      });
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      toast.error("Failed to find location", {
-        description: "Please check your internet connection",
-        duration: 3000,
-      });
-    }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        toast.error("Network error", {
+          description: "Could not reach geocoding service",
+          duration: 3000,
+        });
+      }
+    };
+
+    geocodeWithFetch();
   };
 
   const getSeverityColor = (severity: string) => {
@@ -340,7 +372,11 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
               className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-[#1F2F57] dark:text-slate-200 placeholder:text-[#9394a5] focus:outline-none focus:ring-2 focus:ring-[#0070E1]"
             />
             <Button
-              onClick={handleManualNavigation}
+              onClick={() => {
+                console.log('Button clicked!');
+                console.log('Button disabled?', !currentLocation || !destinationInput.trim());
+                handleManualNavigation();
+              }}
               disabled={!currentLocation || !destinationInput.trim()}
               className="bg-[#0070E1] hover:bg-[#0056b3] text-white px-4 py-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
