@@ -174,7 +174,6 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
     console.log('=== handleManualNavigation CALLED ===');
     console.log('Destination input:', destinationInput);
     console.log('Current location:', currentLocation);
-    console.log('Google Maps loaded:', !!window.google);
     
     if (!destinationInput.trim()) {
       toast.error("Please enter a destination");
@@ -188,65 +187,81 @@ export function SafetyScoutScreen({ onNavigateToSettings }: SafetyScoutScreenPro
       return;
     }
 
-    // Check if Google Maps is loaded
-    if (!window.google || !window.google.maps) {
-      toast.error("Maps not loaded", {
-        description: "Please wait for the map to load and try again",
-      });
-      return;
-    }
-
     // Use Google Geocoding REST API directly (more reliable than SDK)
     const geocodeWithFetch = async () => {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        console.error('❌ API Key not found in environment');
+        toast.error("API Key missing", {
+          description: "VITE_GOOGLE_MAPS_API_KEY not configured",
+        });
+        return;
+      }
+
       const encodedAddress = encodeURIComponent(destinationInput);
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
       
-      console.log('Fetching geocoding from REST API:', url);
+      console.log('🌐 Fetching geocoding from REST API:', url.split('&key=')[0] + '&key=***');
       
       try {
         const response = await fetch(url);
-        const data = await response.json();
         
-        console.log('Geocoding REST response:', data);
+        if (!response.ok) {
+          console.error('❌ HTTP Error:', response.status, response.statusText);
+          toast.error("Network error", {
+            description: `HTTP ${response.status}: ${response.statusText}`,
+          });
+          return;
+        }
+
+        const data = await response.json();
+        console.log('📍 Geocoding REST response - Status:', data.status);
+        console.log('Full response:', data);
         
         if (data.status === 'OK' && data.results && data.results[0]) {
           const location = data.results[0].geometry.location;
           const destCoords: [number, number] = [location.lng, location.lat];
           
-          console.log('Navigation - Start:', currentLocation, 'Dest:', destCoords);
+          console.log('✅ Geocoding success');
+          console.log('Start coords:', currentLocation);
+          console.log('Dest coords:', destCoords);
+          console.log('Dest name:', data.results[0].formatted_address);
           
           setNavigationStart(currentLocation);
           setNavigationDest(destCoords);
           setNavigationDestName(data.results[0].formatted_address || destinationInput);
           setLiveNavigationActive(true);
           
+          console.log('✅ State updated - liveNavigationActive should be true');
+          
           toast.success("Navigation started", {
             description: `Routing to ${data.results[0].formatted_address}`,
             duration: 3000,
           });
         } else {
-          console.error('Geocoding failed:', data.status, data.error_message);
+          console.error('❌ Geocoding failed:', data.status, data.error_message);
+          
+          let errorMsg = `Geocoding failed: ${data.status}`;
+          let description = '';
           
           if (data.status === 'REQUEST_DENIED') {
-            toast.error("Geocoding API Error", {
-              description: data.error_message || "API key issue - check restrictions",
-              duration: 5000,
-            });
+            description = 'Geocoding API not enabled or API key invalid';
           } else if (data.status === 'ZERO_RESULTS') {
-            toast.error("Location not found", {
-              description: "Please try a different address",
-              duration: 3000,
-            });
+            description = 'Location not found - please try a different address';
+          } else if (data.status === 'OVER_QUERY_LIMIT') {
+            description = 'API quota exceeded, please wait';
           } else {
-            toast.error(`Geocoding error: ${data.status}`, {
-              description: data.error_message || "Please check API configuration",
-              duration: 3000,
-            });
+            description = data.error_message || 'Please check browser console';
           }
+          
+          toast.error(errorMsg, {
+            description: description,
+            duration: 5000,
+          });
         }
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('❌ Fetch error:', error);
         toast.error("Network error", {
           description: "Could not reach geocoding service",
           duration: 3000,

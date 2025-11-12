@@ -1,5 +1,6 @@
 import React from 'react';
 import { GoogleMap, useJsApiLoader, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
+import { toast } from 'sonner';
 import { HazardData } from './HazardService';
 
 const containerStyle = {
@@ -87,32 +88,60 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
 
   // Calculate directions when navigation is requested
   React.useEffect(() => {
-    if (showDirections && directionsOrigin && directionsDestination && isLoaded && window.google) {
-      console.log('Calculating directions from', directionsOrigin, 'to', directionsDestination);
-      const directionsService = new google.maps.DirectionsService();
-      
-      directionsService.route(
-        {
-          origin: directionsOrigin,
-          destination: directionsDestination,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          console.log('Directions response - Status:', status);
-          if (status === google.maps.DirectionsStatus.OK && result) {
-            console.log('Directions calculated successfully:', result);
-            setDirections(result);
-          } else {
-            console.error('Directions request failed:', status, result);
-            alert(`Directions request failed: ${status}. Please check if the Directions API is enabled in Google Cloud Console.`);
-          }
-        }
-      );
-    } else {
-      console.log('Clearing directions - showDirections:', showDirections, 'origin:', directionsOrigin, 'dest:', directionsDestination, 'isLoaded:', isLoaded);
+    if (!showDirections || !directionsOrigin || !directionsDestination || !isLoaded) {
+      console.log('🗺️ Clearing directions - showDirections:', showDirections, 'origin:', directionsOrigin, 'dest:', directionsDestination, 'isLoaded:', isLoaded);
       setDirections(null);
+      return;
     }
-  }, [showDirections, directionsOrigin, directionsDestination, isLoaded]);
+
+    if (typeof window === 'undefined' || !window.google) {
+      console.warn('⚠️ Google Maps not available yet');
+      return;
+    }
+
+    console.log('🗺️ Calculating directions from', directionsOrigin, 'to', directionsDestination);
+    const directionsService = new google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: directionsOrigin,
+        destination: directionsDestination,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        console.log('📍 Directions response - Status:', status);
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          console.log('✅ Directions calculated successfully:', result);
+          setDirections(result);
+          const totalDistance = result.routes[0].legs.reduce((sum, leg) => sum + leg.distance?.value || 0, 0);
+          toast.success('Route calculated', {
+            description: `Distance: ${(totalDistance / 1000).toFixed(1)}km`,
+            duration: 3000,
+          });
+        } else {
+          console.error('❌ Directions request failed - Status:', status);
+          
+          let errorMsg = `Directions request failed: ${status}`;
+          let description = '';
+          
+          if (status === 'NOT_FOUND') {
+            description = 'One or both locations could not be found';
+          } else if (status === 'ZERO_RESULTS') {
+            description = 'No route found between start and destination';
+          } else if (status === 'REQUEST_DENIED') {
+            description = 'Check if Directions API is enabled in Google Cloud Console';
+          } else if (status === 'OVER_QUERY_LIMIT') {
+            description = 'API quota exceeded, please wait';
+          }
+          
+          toast.error(errorMsg, {
+            description: description || 'Please check browser console for details',
+            duration: 5000,
+          });
+        }
+      }
+    );
+  }, [showDirections, directionsOrigin?.lat, directionsOrigin?.lng, directionsDestination?.lat, directionsDestination?.lng, isLoaded]);
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
     if (onMapLoad) {
@@ -309,12 +338,15 @@ const GoogleMapWrapper: React.FC<GoogleMapWrapperProps> = ({
           <DirectionsRenderer
             directions={directions}
             options={{
-              suppressMarkers: false,
+              suppressMarkers: false,  // Show start/end markers
               polylineOptions: {
                 strokeColor: '#0070E1',
                 strokeWeight: 5,
                 strokeOpacity: 0.8,
               },
+              markerOptions: {
+                visible: true,
+              }
             }}
           />
         )}
